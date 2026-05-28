@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>American Weekend Vacation – Fireworks Street Run</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Title Screen -->
+  <div id="title-screen" class="screen">
+    <h1>Fireworks Street Run</h1>
+    <p>
+      Jamie is heading home after a weekend block party on an American street.  
+      Jump over the neighborhood dogs and make it home before curfew while fireworks light up the sky!
+    </p>
+    <button id="start-button">Start Game</button>
+    <button id="high-scores-button">High Scores</button>
+  </div>
+
+  <!-- Game Screen -->
+  <div id="game-screen" class="screen hidden">
+    <canvas id="game-canvas" width="800" height="400"></canvas>
+    <div id="hud">
+      <span id="score-display">Score: 0</span>
+      <span id="health-display">Health: 3</span>
+    </div>
+  </div>
+
+  <!-- High Scores Screen -->
+  <div id="high-scores-screen" class="screen hidden">
+    <h2>High Scores</h2>
+    <ul id="high-scores-list"></ul>
+    <button id="back-to-title">Back to Title</button>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>

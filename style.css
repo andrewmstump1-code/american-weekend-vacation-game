@@ -1,0 +1,29 @@
+body {
+  margin: 0;
+  background: #111;
+  color: #fff;
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+
+.screen {
+  display: block;
+}
+
+.hidden {
+  display: none;
+}
+
+#game-canvas {
+  display: block;
+  margin: 20px auto;
+  border: 2px solid #fff;
+  background: #000; /* The actual scene is drawn in JS */
+}
+
+#hud {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  font-size: 20px;
+}
