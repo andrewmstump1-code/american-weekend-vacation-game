@@ -23,6 +23,7 @@ let keys = {};
 let player;
 let dogs = [];
 let streetLength = 1600; // how far Jamie has to run to reach home
+let cameraX = 0;
 let gameOver = false;
 let score = 0;
 let health = 3;
@@ -43,10 +44,12 @@ function startGame() {
     vy: 0,
     width: 30,
     height: 50,
-    onGround: false
+    onGround: false,
+    invulnerableUntil: 0
   };
 
   dogs = [];
+  cameraX = 0;
   score = 0;
   health = 3;
   gameOver = false;
@@ -114,14 +117,16 @@ function update() {
     player.onGround = true;
   }
 
-  // Collisions with dogs (lose health)
+  // Collisions with dogs (lose health). Invulnerability frames prevent a single
+  // dog from draining multiple health while Jamie is still overlapping it.
+  const now = performance.now();
   dogs.forEach((dog) => {
-    if (rectsOverlap(player, dog)) {
-      // On collision, push Jamie back a bit and lose health
+    if (rectsOverlap(player, dog) && now >= player.invulnerableUntil) {
       player.x -= 30;
       if (player.x < 0) player.x = 0;
 
       health -= 1;
+      player.invulnerableUntil = now + 1000;
       document.getElementById('health-display').textContent = 'Health: ' + health;
 
       if (health <= 0) {
@@ -136,6 +141,11 @@ function update() {
       document.getElementById('score-display').textContent = 'Score: ' + score;
     }
   });
+
+  // Camera follows the player, locked roughly 1/3 from the left edge,
+  // clamped so it doesn't reveal empty world past the end of the street.
+  const maxCameraX = streetLength + 100 - canvas.width;
+  cameraX = Math.max(0, Math.min(player.x - canvas.width / 3, maxCameraX));
 
   // End of level: reach the end of the street (home)
   if (player.x > streetLength) {
@@ -184,43 +194,45 @@ function drawFireworks() {
 }
 
 function drawHouses() {
-  // Simplified houses on both sides of the street
-  for (let i = 0; i < 4; i++) {
-    // Left side houses
-    let baseXLeft = i * 200 + 40;
-    ctx.fillStyle = '#8B4513'; // brown house
-    ctx.fillRect(baseXLeft, 200, 80, 80); // house body
-    ctx.fillStyle = '#DEB887'; // roof
+  // Tile two staggered rows of houses across the full street so the world
+  // isn't empty once the camera scrolls past the first screen.
+  const houseCount = Math.ceil((streetLength + canvas.width) / 200);
+  for (let i = 0; i < houseCount; i++) {
+    // Back row
+    let baseXBack = i * 200 + 40;
+    ctx.fillStyle = '#8B4513';
+    ctx.fillRect(baseXBack, 200, 80, 80);
+    ctx.fillStyle = '#DEB887';
     ctx.beginPath();
-    ctx.moveTo(baseXLeft - 10, 200);
-    ctx.lineTo(baseXLeft + 40, 160);
-    ctx.lineTo(baseXLeft + 90, 200);
+    ctx.moveTo(baseXBack - 10, 200);
+    ctx.lineTo(baseXBack + 40, 160);
+    ctx.lineTo(baseXBack + 90, 200);
     ctx.closePath();
     ctx.fill();
 
-    // Right side houses
-    let baseXRight = i * 200 + 120;
-    ctx.fillStyle = '#556B2F'; // greenish house
-    ctx.fillRect(baseXRight + 300, 210, 80, 80);
-    ctx.fillStyle = '#CD853F'; // roof
+    // Front row, offset 100px so the silhouettes overlap nicely
+    let baseXFront = i * 200 + 140;
+    ctx.fillStyle = '#556B2F';
+    ctx.fillRect(baseXFront, 210, 80, 80);
+    ctx.fillStyle = '#CD853F';
     ctx.beginPath();
-    ctx.moveTo(baseXRight + 290, 210);
-    ctx.lineTo(baseXRight + 340, 170);
-    ctx.lineTo(baseXRight + 390, 210);
+    ctx.moveTo(baseXFront - 10, 210);
+    ctx.lineTo(baseXFront + 40, 170);
+    ctx.lineTo(baseXFront + 90, 210);
     ctx.closePath();
     ctx.fill();
   }
 }
 
 function drawStreet() {
-  // Street
-  ctx.fillStyle = '#333333';
-  ctx.fillRect(0, 260, canvas.width, 140);
+  const worldWidth = streetLength + canvas.width;
 
-  // Lane lines
+  ctx.fillStyle = '#333333';
+  ctx.fillRect(0, 260, worldWidth, 140);
+
   ctx.strokeStyle = '#FFFF00';
   ctx.lineWidth = 3;
-  for (let x = 0; x < canvas.width; x += 40) {
+  for (let x = 0; x < worldWidth; x += 40) {
     ctx.beginPath();
     ctx.moveTo(x, 330);
     ctx.lineTo(x + 20, 330);
@@ -231,29 +243,37 @@ function drawStreet() {
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Background: sunset sky, fireworks, houses, street
+  // Sky and fireworks stay in screen space so the sunset is always visible.
   drawGradientSky();
   drawFireworks();
+
+  // Everything on the street scrolls with the camera.
+  ctx.save();
+  ctx.translate(-cameraX, 0);
+
   drawHouses();
   drawStreet();
 
-  // Player (Jamie the kid)
-  ctx.fillStyle = '#FFD700'; // gold
-  ctx.fillRect(player.x, player.y, player.width, player.height);
-
-  // Simple head
-  ctx.fillStyle = '#FFE4C4';
-  ctx.beginPath();
-  ctx.arc(player.x + player.width / 2, player.y - 10, 10, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Dogs (obstacles)
   dogs.forEach((dog) => {
-    ctx.fillStyle = '#C0C0C0'; // light gray dog
-    ctx.fillRect(dog.x, dog.y, dog.width, dog.height); // body
-    // head
+    ctx.fillStyle = '#C0C0C0';
+    ctx.fillRect(dog.x, dog.y, dog.width, dog.height);
     ctx.fillRect(dog.x + dog.width - 10, dog.y - 10, 10, 10);
   });
+
+  // Flicker the player during i-frames so the hit feedback is visible.
+  const now = performance.now();
+  const isInvulnerable = now < player.invulnerableUntil;
+  const visibleThisFrame = !isInvulnerable || Math.floor(now / 100) % 2 === 0;
+  if (visibleThisFrame) {
+    ctx.fillStyle = '#FFD700';
+    ctx.fillRect(player.x, player.y, player.width, player.height);
+    ctx.fillStyle = '#FFE4C4';
+    ctx.beginPath();
+    ctx.arc(player.x + player.width / 2, player.y - 10, 10, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.restore();
 }
 
 // --- High score handling ---
