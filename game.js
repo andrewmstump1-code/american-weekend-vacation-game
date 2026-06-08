@@ -22,6 +22,8 @@ const ctx = canvas.getContext('2d');
 let keys = {};
 let player;
 let dogs = [];
+let houses = [];
+let waveHouseIndex = 0;
 let streetLength = 1600; // how far Jamie has to run to reach home
 let gameOver = false;
 let score = 0;
@@ -48,6 +50,7 @@ function startGame() {
   };
 
   dogs = [];
+  houses = [];
   score = 0;
   health = 3;
   gameOver = false;
@@ -58,6 +61,7 @@ function startGame() {
   document.getElementById('timer-display').textContent = 'Timer: 00:00';
 
   spawnDogs();
+  spawnHouses();
   loop();
 }
 
@@ -73,6 +77,34 @@ function spawnDogs() {
       height: 20,
       passed: false    // to track scoring when Jamie passes them
     });
+  }
+}
+
+function spawnHouses() {
+  houses = [];
+  waveHouseIndex = Math.floor(Math.random() * 8);
+
+  for (let side = 0; side < 2; side++) {
+    for (let i = 0; i < 4; i++) {
+      const isLeft = side === 0;
+      const x = isLeft ? i * 200 + 40 : i * 200 + 420;
+      const y = isLeft ? 200 : 210;
+      const baseColor = isLeft ? '#8B4513' : '#556B2F';
+      const roofColor = isLeft ? '#DEB887' : '#CD853F';
+
+      houses.push({
+        x,
+        y,
+        width: 80,
+        height: 80,
+        baseColor,
+        roofColor,
+        doorColor: '#3C220F',
+        windowLight: Math.random() > 0.4,
+        address: String(100 + Math.floor(Math.random() * 900)),
+        hasPerson: houses.length === waveHouseIndex
+      });
+    }
   }
 }
 
@@ -194,32 +226,95 @@ function drawFireworks() {
 }
 
 function drawHouses() {
-  // Simplified houses on both sides of the street
-  for (let i = 0; i < 4; i++) {
-    // Left side houses
-    let baseXLeft = i * 200 + 40;
-    ctx.fillStyle = '#8B4513'; // brown house
-    ctx.fillRect(baseXLeft, 200, 80, 80); // house body
-    ctx.fillStyle = '#DEB887'; // roof
+  houses.forEach((house) => {
+    // House body
+    ctx.fillStyle = house.baseColor;
+    ctx.fillRect(house.x, house.y, house.width, house.height);
+
+    // Roof
+    ctx.fillStyle = house.roofColor;
     ctx.beginPath();
-    ctx.moveTo(baseXLeft - 10, 200);
-    ctx.lineTo(baseXLeft + 40, 160);
-    ctx.lineTo(baseXLeft + 90, 200);
+    ctx.moveTo(house.x - 10, house.y);
+    ctx.lineTo(house.x + house.width / 2, house.y - 40);
+    ctx.lineTo(house.x + house.width + 10, house.y);
     ctx.closePath();
     ctx.fill();
 
-    // Right side houses
-    let baseXRight = i * 200 + 120;
-    ctx.fillStyle = '#556B2F'; // greenish house
-    ctx.fillRect(baseXRight + 300, 210, 80, 80);
-    ctx.fillStyle = '#CD853F'; // roof
+    // Door
+    const doorWidth = 24;
+    const doorHeight = 36;
+    const doorX = house.x + (house.width - doorWidth) / 2;
+    const doorY = house.y + house.height - doorHeight;
+    ctx.fillStyle = house.doorColor;
+    ctx.fillRect(doorX, doorY, doorWidth, doorHeight);
+    ctx.fillStyle = '#FFD700';
     ctx.beginPath();
-    ctx.moveTo(baseXRight + 290, 210);
-    ctx.lineTo(baseXRight + 340, 170);
-    ctx.lineTo(baseXRight + 390, 210);
-    ctx.closePath();
+    ctx.arc(doorX + doorWidth - 6, doorY + doorHeight / 2, 3, 0, Math.PI * 2);
     ctx.fill();
-  }
+
+    // Windows
+    const windowColor = house.windowLight ? '#FFEB8A' : '#1E2B3C';
+    const frameColor = '#333';
+    const winW = 18;
+    const winH = 16;
+    const windowPositions = [
+      { x: house.x + 10, y: house.y + 18 },
+      { x: house.x + house.width - 10 - winW, y: house.y + 18 }
+    ];
+
+    windowPositions.forEach((pos) => {
+      ctx.fillStyle = windowColor;
+      ctx.fillRect(pos.x, pos.y, winW, winH);
+      ctx.strokeStyle = frameColor;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(pos.x, pos.y, winW, winH);
+
+      ctx.beginPath();
+      ctx.moveTo(pos.x + winW / 2, pos.y);
+      ctx.lineTo(pos.x + winW / 2, pos.y + winH);
+      ctx.moveTo(pos.x, pos.y + winH / 2);
+      ctx.lineTo(pos.x + winW, pos.y + winH / 2);
+      ctx.stroke();
+    });
+
+    // Address number
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 12px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(house.address, house.x + house.width / 2, house.y + house.height + 18);
+
+    // Person waving from one house
+    if (house.hasPerson) {
+      const personX = doorX + doorWidth / 2;
+      const personHeadY = doorY - 12;
+
+      // Head
+      ctx.fillStyle = '#FFD1A9';
+      ctx.beginPath();
+      ctx.arc(personX, personHeadY, 7, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Body and limbs
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(personX, personHeadY + 7);
+      ctx.lineTo(personX, personHeadY + 24);
+      ctx.moveTo(personX, personHeadY + 12);
+      ctx.lineTo(personX - 8, personHeadY + 22);
+      ctx.moveTo(personX, personHeadY + 12);
+      ctx.lineTo(personX + 12, personHeadY + 4);
+      ctx.moveTo(personX, personHeadY + 24);
+      ctx.lineTo(personX - 6, personHeadY + 34);
+      ctx.moveTo(personX, personHeadY + 24);
+      ctx.lineTo(personX + 6, personHeadY + 34);
+      ctx.stroke();
+
+      // Shirt
+      ctx.fillStyle = '#FF4C4C';
+      ctx.fillRect(personX - 5, personHeadY + 7, 10, 12);
+    }
+  });
 }
 
 function drawStreet() {
@@ -248,21 +343,73 @@ function draw() {
   drawStreet();
 
   // Player (Jamie the kid)
-  ctx.fillStyle = '#FFD700'; // gold
-  ctx.fillRect(player.x, player.y, player.width, player.height);
+  const shirtHeight = 28;
+  const pantsHeight = 18;
 
-  // Simple head
+  // Shirt
+  ctx.fillStyle = '#D32F2F';
+  ctx.fillRect(player.x, player.y, player.width, shirtHeight);
+
+  // Pants
+  ctx.fillStyle = '#2E5AAC';
+  ctx.fillRect(player.x, player.y + shirtHeight, player.width, pantsHeight);
+
+  // Head
   ctx.fillStyle = '#FFE4C4';
   ctx.beginPath();
   ctx.arc(player.x + player.width / 2, player.y - 10, 10, 0, Math.PI * 2);
   ctx.fill();
 
+  // Hat brim
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(player.x - 2, player.y - 20, player.width + 4, 8);
+
+  // Hat top
+  ctx.beginPath();
+  ctx.arc(player.x + player.width / 2, player.y - 20, 9, Math.PI, 0, true);
+  ctx.fill();
+
+  // Face details
+  ctx.fillStyle = '#000000';
+  ctx.beginPath();
+  ctx.arc(player.x + player.width / 2 - 4, player.y - 12, 2, 0, Math.PI * 2);
+  ctx.arc(player.x + player.width / 2 + 4, player.y - 12, 2, 0, Math.PI * 2);
+  ctx.fill();
+
   // Dogs (obstacles)
   dogs.forEach((dog) => {
-    ctx.fillStyle = '#C0C0C0'; // light gray dog
-    ctx.fillRect(dog.x, dog.y, dog.width, dog.height); // body
-    // head
-    ctx.fillRect(dog.x + dog.width - 10, dog.y - 10, 10, 10);
+    const bodyX = dog.x;
+    const bodyY = dog.y;
+    const bodyW = dog.width;
+    const bodyH = dog.height;
+
+    ctx.fillStyle = '#8B5A2B';
+    ctx.fillRect(bodyX, bodyY, bodyW, bodyH);
+
+    // Head
+    ctx.fillRect(bodyX + bodyW - 10, bodyY - 14, 18, 14);
+    ctx.fillRect(bodyX + bodyW - 4, bodyY - 20, 4, 8);
+    ctx.fillRect(bodyX + bodyW + 8, bodyY - 20, 4, 8);
+
+    // Eye
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    ctx.arc(bodyX + bodyW + 4, bodyY - 8, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Legs
+    ctx.fillStyle = '#8B5A2B';
+    for (let leg = 0; leg < 4; leg++) {
+      ctx.fillRect(bodyX + 4 + leg * 8, bodyY + bodyH, 4, 10);
+    }
+
+    // Tail
+    ctx.strokeStyle = '#8B5A2B';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(bodyX, bodyY + 10);
+    ctx.quadraticCurveTo(bodyX - 12, bodyY + 2, bodyX - 18, bodyY + 14);
+    ctx.stroke();
   });
 }
 
