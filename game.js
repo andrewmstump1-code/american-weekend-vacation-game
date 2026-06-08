@@ -36,13 +36,19 @@ async function submitEmail() {
   startButton.textContent = 'Submitting...';
 
   try {
-    const response = await fetch('api/subscribe', {
+    const response = await fetch('/api/subscribe', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email })
     });
 
-    const result = await response.json();
+    let result = {};
+    try {
+      result = await response.json();
+    } catch (parseError) {
+      result.error = `HTTP ${response.status} ${response.statusText}`;
+    }
+
     if (!response.ok) {
       emailError.textContent = result?.error || 'Unable to submit your email. Please try again.';
       emailError.classList.remove('hidden');

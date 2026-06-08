@@ -29,7 +29,7 @@ module.exports = async function handler(req, res) {
 
   let body;
   try {
-    body = await parseJsonBody(req);
+    body = req.body || await parseJsonBody(req);
   } catch (error) {
     return res.status(400).json({ error: 'Invalid JSON body.' });
   }
