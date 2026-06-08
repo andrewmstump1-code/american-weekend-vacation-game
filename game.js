@@ -36,7 +36,7 @@ async function submitEmail() {
   startButton.textContent = 'Submitting...';
 
   try {
-    const response = await fetch('/api/subscribe', {
+    const response = await fetch('api/subscribe', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email })

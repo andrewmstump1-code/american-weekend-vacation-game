@@ -1,4 +1,4 @@
-import { createClient } from '@neondatabase/serverless';
+const { createClient } = require('@neondatabase/serverless');
 
 const client = createClient({ connectionString: process.env.NEON_DB_URL });
 
@@ -22,7 +22,7 @@ async function parseJsonBody(req) {
   });
 }
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed. Use POST.' });
   }
