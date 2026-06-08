@@ -17,6 +17,9 @@ function showScreen(screen) {
 // --- Canvas setup ---
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
+const messageOverlay = document.getElementById('message-overlay');
+const messageText = document.getElementById('message-text');
+const messageOk = document.getElementById('message-ok');
 
 // Game state
 let keys = {};
@@ -24,6 +27,7 @@ let player;
 let dogs = [];
 let houses = [];
 let waveHouseIndex = 0;
+let pendingEndGame = null;
 let streetLength = 1600; // how far Jamie has to run to reach home
 let gameOver = false;
 let score = 0;
@@ -55,6 +59,8 @@ function startGame() {
   health = 3;
   gameOver = false;
   startTime = Date.now();
+  pendingEndGame = null;
+  messageOverlay.classList.add('hidden');
 
   document.getElementById('score-display').textContent = 'Score: ' + score;
   document.getElementById('health-display').textContent = 'Health: ' + health;
@@ -328,10 +334,11 @@ function drawStreet(cameraX) {
   ctx.fillStyle = '#333333';
   ctx.fillRect(0, 260, canvas.width, 140);
 
-  // Lane lines
+  // Lane lines scroll with camera movement
+  const offset = cameraX % 40;
   ctx.strokeStyle = '#FFFF00';
   ctx.lineWidth = 3;
-  for (let x = 0; x < canvas.width; x += 40) {
+  for (let x = -offset; x < canvas.width; x += 40) {
     ctx.beginPath();
     ctx.moveTo(x, 330);
     ctx.lineTo(x + 20, 330);
@@ -384,40 +391,41 @@ function draw() {
   // Player (Jamie the kid)
   const shirtHeight = 28;
   const pantsHeight = 18;
+  const screenPlayerX = player.x - cameraX;
 
   // Shirt
   ctx.fillStyle = '#D32F2F';
-  ctx.fillRect(player.x, player.y, player.width, shirtHeight);
+  ctx.fillRect(screenPlayerX, player.y, player.width, shirtHeight);
 
   // Pants
   ctx.fillStyle = '#2E5AAC';
-  ctx.fillRect(player.x, player.y + shirtHeight, player.width, pantsHeight);
+  ctx.fillRect(screenPlayerX, player.y + shirtHeight, player.width, pantsHeight);
 
   // Head
   ctx.fillStyle = '#FFE4C4';
   ctx.beginPath();
-  ctx.arc(player.x + player.width / 2, player.y - 10, 10, 0, Math.PI * 2);
+  ctx.arc(screenPlayerX + player.width / 2, player.y - 10, 10, 0, Math.PI * 2);
   ctx.fill();
 
   // Hat brim
   ctx.fillStyle = '#FFFFFF';
-  ctx.fillRect(player.x - 2, player.y - 20, player.width + 4, 8);
+  ctx.fillRect(screenPlayerX - 2, player.y - 20, player.width + 4, 8);
 
   // Hat top
   ctx.beginPath();
-  ctx.arc(player.x + player.width / 2, player.y - 20, 9, Math.PI, 0, true);
+  ctx.arc(screenPlayerX + player.width / 2, player.y - 20, 9, Math.PI, 0, true);
   ctx.fill();
 
   // Face details
   ctx.fillStyle = '#000000';
   ctx.beginPath();
-  ctx.arc(player.x + player.width / 2 - 4, player.y - 12, 2, 0, Math.PI * 2);
-  ctx.arc(player.x + player.width / 2 + 4, player.y - 12, 2, 0, Math.PI * 2);
+  ctx.arc(screenPlayerX + player.width / 2 - 4, player.y - 12, 2, 0, Math.PI * 2);
+  ctx.arc(screenPlayerX + player.width / 2 + 4, player.y - 12, 2, 0, Math.PI * 2);
   ctx.fill();
 
   // Dogs (obstacles)
   dogs.forEach((dog) => {
-    const bodyX = dog.x;
+    const bodyX = dog.x - cameraX;
     const bodyY = dog.y;
     const bodyW = dog.width;
     const bodyH = dog.height;
@@ -465,27 +473,44 @@ function saveHighScores(scores) {
 }
 
 // reachedHome = true if Jamie reached home, false if lost all health
+function showMessage(text, reachedHome) {
+  pendingEndGame = reachedHome;
+  messageText.textContent = text;
+  messageOverlay.classList.remove('hidden');
+}
+
+messageOk.addEventListener('click', () => {
+  messageOverlay.classList.add('hidden');
+
+  if (pendingEndGame !== null) {
+    const reachedHome = pendingEndGame;
+    pendingEndGame = null;
+
+    let message = reachedHome
+      ? 'You made it home! Your score: '
+      : 'You got stopped by the dogs. Your score: ';
+
+    const initials = prompt(message + score + '. Enter your initials (3 letters):', 'AAA');
+    if (initials) {
+      const trimmed = initials.toUpperCase().slice(0, 3);
+      const scores = getHighScores();
+      scores.push({ initials: trimmed, score });
+      scores.sort((a, b) => b.score - a.score);
+      saveHighScores(scores.slice(0, 10));
+    }
+
+    showScreen(titleScreen);
+  }
+});
+
 function endGame(reachedHome) {
   gameOver = true;
 
   if (reachedHome) {
-    alert('You Made It!!');
+    showMessage('You Made It!!', reachedHome);
+  } else {
+    showMessage('Game Over', reachedHome);
   }
-
-  let message = reachedHome
-    ? 'You made it home! Your score: '
-    : 'You got stopped by the dogs. Your score: ';
-
-  const initials = prompt(message + score + '. Enter your initials (3 letters):', 'AAA');
-  if (initials) {
-    const trimmed = initials.toUpperCase().slice(0, 3);
-    const scores = getHighScores();
-    scores.push({ initials: trimmed, score });
-    scores.sort((a, b) => b.score - a.score);
-    saveHighScores(scores.slice(0, 10));
-  }
-
-  showScreen(titleScreen);
 }
 
 function renderHighScores() {
