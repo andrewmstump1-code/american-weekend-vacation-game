@@ -22,6 +22,16 @@ async function parseJsonBody(req) {
   });
 }
 
+async function ensureSubscribersTable() {
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+      id SERIAL PRIMARY KEY,
+      email TEXT NOT NULL UNIQUE,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed. Use POST.' });
@@ -44,6 +54,8 @@ module.exports = async function handler(req, res) {
   }
 
   try {
+    await ensureSubscribersTable();
+
     const result = await client.query(
       'INSERT INTO newsletter_subscribers (email, created_at) VALUES ($1, NOW()) RETURNING id',
       [email]
