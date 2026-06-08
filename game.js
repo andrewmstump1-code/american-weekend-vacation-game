@@ -17,9 +17,6 @@ function showScreen(screen) {
 // --- Canvas setup ---
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
-const messageOverlay = document.getElementById('message-overlay');
-const messageText = document.getElementById('message-text');
-const messageOk = document.getElementById('message-ok');
 
 // Game state
 let keys = {};
@@ -32,6 +29,7 @@ let gameOver = false;
 let score = 0;
 let health = 3;
 let startTime = 0;
+let gameOverMessage = '';
 
 window.addEventListener('keydown', (e) => {
   keys[e.code] = true;
@@ -58,7 +56,7 @@ function startGame() {
   health = 3;
   gameOver = false;
   startTime = Date.now();
-  messageOverlay.classList.add('hidden');
+  gameOverMessage = '';
 
   document.getElementById('score-display').textContent = 'Score: ' + score;
   document.getElementById('health-display').textContent = 'Health: ' + health;
@@ -456,6 +454,18 @@ function draw() {
     ctx.quadraticCurveTo(bodyX - 12, bodyY + 2, bodyX - 18, bodyY + 14);
     ctx.stroke();
   });
+
+  if (gameOverMessage) {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+    ctx.fillRect(120, 150, 560, 100);
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(120, 150, 560, 100);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 36px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(gameOverMessage, canvas.width / 2, 210);
+  }
 }
 
 // --- High score handling ---
@@ -470,24 +480,13 @@ function saveHighScores(scores) {
   localStorage.setItem(HIGH_SCORES_KEY, JSON.stringify(scores));
 }
 
-// reachedHome = true if Jamie reached home, false if lost all health
-function showMessage(text) {
-  messageText.textContent = text;
-  messageOverlay.classList.remove('hidden');
-}
-
-messageOk.addEventListener('click', () => {
-  messageOverlay.classList.add('hidden');
-  showScreen(titleScreen);
-});
-
 function endGame(reachedHome) {
   gameOver = true;
 
   if (reachedHome) {
-    showMessage('You Made It!!');
+    gameOverMessage = 'You Made It!!';
   } else {
-    showScreen(titleScreen);
+    gameOverMessage = 'Game Over';
   }
 }
 
