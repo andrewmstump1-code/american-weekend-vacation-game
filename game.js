@@ -8,6 +8,7 @@ const highScoresButton = document.getElementById('high-scores-button');
 const backToTitleButton = document.getElementById('back-to-title');
 const emailInput = document.getElementById('email-input');
 const emailError = document.getElementById('email-error');
+const emailWarning = document.getElementById('email-warning');
 const emailSuccess = document.getElementById('email-success');
 
 function showScreen(screen) {
@@ -30,6 +31,7 @@ async function submitEmail() {
   }
 
   emailError.classList.add('hidden');
+  emailWarning.classList.add('hidden');
   emailSuccess.classList.add('hidden');
   startButton.disabled = true;
   const originalLabel = startButton.textContent;
@@ -50,10 +52,17 @@ async function submitEmail() {
     }
 
     if (!response.ok) {
-      emailError.textContent = result?.error || 'Unable to submit your email. Please try again.';
-      emailError.classList.remove('hidden');
-      startButton.disabled = false;
-      startButton.textContent = originalLabel;
+      const message = result?.error || 'Unable to submit your email. Please try again.';
+      emailWarning.textContent = `Email save failed: ${message}. You can still play.`;
+      emailWarning.classList.remove('hidden');
+      emailInput.value = '';
+
+      setTimeout(() => {
+        showScreen(gameScreen);
+        startGame();
+        startButton.disabled = false;
+        startButton.textContent = originalLabel;
+      }, 1000);
       return;
     }
 
@@ -69,15 +78,22 @@ async function submitEmail() {
     }, 1000);
   } catch (error) {
     console.error(error);
-    emailError.textContent = 'Unable to submit your email. Please try again later.';
-    emailError.classList.remove('hidden');
-    startButton.disabled = false;
-    startButton.textContent = originalLabel;
+    emailWarning.textContent = `Unable to save email: ${error.message || 'network error'}. You can still play.`;
+    emailWarning.classList.remove('hidden');
+    emailInput.value = '';
+
+    setTimeout(() => {
+      showScreen(gameScreen);
+      startGame();
+      startButton.disabled = false;
+      startButton.textContent = originalLabel;
+    }, 1000);
   }
 }
 
 emailInput.addEventListener('input', () => {
   emailError.classList.add('hidden');
+  emailWarning.classList.add('hidden');
   emailSuccess.classList.add('hidden');
   if (!startButton.disabled) {
     startButton.textContent = 'Get Quote & Play';
