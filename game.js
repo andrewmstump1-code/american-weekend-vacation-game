@@ -488,6 +488,10 @@ function endGame(reachedHome) {
   } else {
     gameOverMessage = 'Game Over';
   }
+
+  draw();
+  promptForInitials();
+  showScreen(titleScreen);
 }
 
 function renderHighScores() {
@@ -499,6 +503,31 @@ function renderHighScores() {
     li.textContent = `${entry.initials} - ${entry.score}`;
     list.appendChild(li);
   });
+}
+
+function renderHomeHighScores() {
+  const list = document.getElementById('home-high-scores-list');
+  list.innerHTML = '';
+  const scores = getHighScores();
+  scores.slice(0, 5).forEach((entry) => {
+    const li = document.createElement('li');
+    li.textContent = `${entry.initials} - ${entry.score}`;
+    list.appendChild(li);
+  });
+}
+
+function promptForInitials() {
+  const initials = prompt('Enter your initials (3 letters):', 'AAA');
+  if (initials) {
+    const trimmed = initials.toUpperCase().slice(0, 3);
+    if (trimmed.length > 0) {
+      const scores = getHighScores();
+      scores.push({ initials: trimmed, score });
+      scores.sort((a, b) => b.score - a.score);
+      saveHighScores(scores.slice(0, 10));
+    }
+  }
+  renderHomeHighScores();
 }
 
 // --- Wire up buttons ---
@@ -513,5 +542,9 @@ highScoresButton.addEventListener('click', () => {
 });
 
 backToTitleButton.addEventListener('click', () => {
+  renderHomeHighScores();
   showScreen(titleScreen);
 });
+
+// Render scores on title screen when loaded
+renderHomeHighScores();
