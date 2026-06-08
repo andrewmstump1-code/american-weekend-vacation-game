@@ -1,17 +1,80 @@
 // --- Screen handling ---
+const landingPage = document.getElementById('landing-page');
 const titleScreen = document.getElementById('title-screen');
 const gameScreen = document.getElementById('game-screen');
 const highScoresScreen = document.getElementById('high-scores-screen');
+
+const emailInput = document.getElementById('email-input');
+const emailSubmitButton = document.getElementById('email-submit-button');
+const emailError = document.getElementById('email-error');
+const emailLoading = document.getElementById('email-loading');
 
 const startButton = document.getElementById('start-button');
 const highScoresButton = document.getElementById('high-scores-button');
 const backToTitleButton = document.getElementById('back-to-title');
 
 function showScreen(screen) {
+  landingPage.classList.add('hidden');
   titleScreen.classList.add('hidden');
   gameScreen.classList.add('hidden');
   highScoresScreen.classList.add('hidden');
   screen.classList.remove('hidden');
+}
+
+// --- Landing Page Handler ---
+emailSubmitButton.addEventListener('click', submitEmail);
+emailInput.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') {
+    submitEmail();
+  }
+});
+
+async function submitEmail() {
+  const email = emailInput.value.trim();
+
+  if (!email || !email.includes('@')) {
+    showEmailError('Please enter a valid email address');
+    return;
+  }
+
+  emailSubmitButton.disabled = true;
+  emailError.classList.add('hidden');
+  emailLoading.classList.remove('hidden');
+
+  try {
+    const response = await fetch('/api/save-email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      showEmailError(data.message || data.error || 'Failed to save email');
+      emailSubmitButton.disabled = false;
+      emailLoading.classList.add('hidden');
+      console.error('API Error:', data);
+      return;
+    }
+
+    // Email saved successfully, proceed to game
+    console.log('Email saved successfully:', email);
+    emailLoading.classList.add('hidden');
+    showScreen(titleScreen);
+  } catch (err) {
+    console.error('Network/Fetch Error:', err);
+    showEmailError('Network error. Make sure the server is running on localhost:3000');
+    emailSubmitButton.disabled = false;
+    emailLoading.classList.add('hidden');
+  }
+}
+
+function showEmailError(message) {
+  emailError.textContent = message;
+  emailError.classList.remove('hidden');
 }
 
 // --- Canvas setup ---

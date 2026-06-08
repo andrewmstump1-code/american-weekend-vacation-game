@@ -2,12 +2,31 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>American Weekend Vacation – Fireworks Street Run</title>
+  <title>Equipment Sales Company – Play & Win</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <!-- Landing Page -->
+  <div id="landing-page" class="screen">
+    <div class="landing-container">
+      <h1 class="company-name">Equipment Sales Company</h1>
+      <p class="landing-subtitle">Enter your email to request more info and play a fun game!</p>
+      <div class="email-input-container">
+        <input 
+          type="email" 
+          id="email-input" 
+          placeholder="your@email.com" 
+          class="email-input"
+        />
+        <button id="email-submit-button" class="email-submit-btn">Enter Game</button>
+      </div>
+      <div id="email-error" class="email-error hidden"></div>
+      <div id="email-loading" class="email-loading hidden">Loading...</div>
+    </div>
+  </div>
+
   <!-- Title Screen -->
-  <div id="title-screen" class="screen">
+  <div id="title-screen" class="screen hidden">
     <h1>Fireworks Street Run</h1>
     <p>
       Jamie is heading home after a weekend block party on an American street.  
