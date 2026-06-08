@@ -26,6 +26,7 @@ let streetLength = 1600; // how far Jamie has to run to reach home
 let gameOver = false;
 let score = 0;
 let health = 3;
+let startTime = 0;
 
 window.addEventListener('keydown', (e) => {
   keys[e.code] = true;
@@ -50,9 +51,11 @@ function startGame() {
   score = 0;
   health = 3;
   gameOver = false;
+  startTime = Date.now();
 
   document.getElementById('score-display').textContent = 'Score: ' + score;
   document.getElementById('health-display').textContent = 'Health: ' + health;
+  document.getElementById('timer-display').textContent = 'Timer: 00:00';
 
   spawnDogs();
   loop();
@@ -136,6 +139,13 @@ function update() {
       document.getElementById('score-display').textContent = 'Score: ' + score;
     }
   });
+
+  // Update timer display
+  const elapsedMs = Date.now() - startTime;
+  const timerSeconds = Math.floor(elapsedMs / 1000);
+  const minutes = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+  const seconds = String(timerSeconds % 60).padStart(2, '0');
+  document.getElementById('timer-display').textContent = `Timer: ${minutes}:${seconds}`;
 
   // End of level: reach the end of the street (home)
   if (player.x > streetLength) {

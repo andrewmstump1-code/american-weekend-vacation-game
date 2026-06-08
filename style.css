@@ -14,9 +14,29 @@ body {
   display: none;
 }
 
+#game-screen {
+  position: relative;
+  width: 820px;
+  margin: 20px auto;
+}
+
+#timer-display {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.75);
+  padding: 8px 12px;
+  border: 1px solid #fff;
+  border-radius: 6px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #fff;
+  z-index: 2;
+}
+
 #game-canvas {
   display: block;
-  margin: 20px auto;
+  margin: 0 auto;
   border: 2px solid #fff;
   background: #000; /* The actual scene is drawn in JS */
 }
@@ -26,4 +46,5 @@ body {
   justify-content: center;
   gap: 40px;
   font-size: 20px;
+  margin-top: 15px;
 }
