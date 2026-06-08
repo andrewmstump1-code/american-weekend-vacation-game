@@ -6,10 +6,6 @@ const highScoresScreen = document.getElementById('high-scores-screen');
 const startButton = document.getElementById('start-button');
 const highScoresButton = document.getElementById('high-scores-button');
 const backToTitleButton = document.getElementById('back-to-title');
-const emailInput = document.getElementById('email-input');
-const emailError = document.getElementById('email-error');
-const emailWarning = document.getElementById('email-warning');
-const emailSuccess = document.getElementById('email-success');
 
 function showScreen(screen) {
   titleScreen.classList.add('hidden');
@@ -17,88 +13,6 @@ function showScreen(screen) {
   highScoresScreen.classList.add('hidden');
   screen.classList.remove('hidden');
 }
-
-function isValidEmail(email) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
-async function submitEmail() {
-  const email = emailInput.value.trim();
-  if (!isValidEmail(email)) {
-    emailError.textContent = 'Please enter a valid email address.';
-    emailError.classList.remove('hidden');
-    return;
-  }
-
-  emailError.classList.add('hidden');
-  emailWarning.classList.add('hidden');
-  emailSuccess.classList.add('hidden');
-  startButton.disabled = true;
-  const originalLabel = startButton.textContent;
-  startButton.textContent = 'Submitting...';
-
-  try {
-    const response = await fetch('/api/subscribe', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email })
-    });
-
-    let result = {};
-    try {
-      result = await response.json();
-    } catch (parseError) {
-      result.error = `HTTP ${response.status} ${response.statusText}`;
-    }
-
-    if (!response.ok) {
-      const message = result?.error || 'Unable to submit your email. Please try again.';
-      emailWarning.textContent = `Email save failed: ${message}. You can still play.`;
-      emailWarning.classList.remove('hidden');
-      emailInput.value = '';
-
-      setTimeout(() => {
-        showScreen(gameScreen);
-        startGame();
-        startButton.disabled = false;
-        startButton.textContent = originalLabel;
-      }, 1000);
-      return;
-    }
-
-    emailSuccess.textContent = 'Email saved! Starting game...';
-    emailSuccess.classList.remove('hidden');
-    emailInput.value = '';
-
-    setTimeout(() => {
-      showScreen(gameScreen);
-      startGame();
-      startButton.disabled = false;
-      startButton.textContent = originalLabel;
-    }, 1000);
-  } catch (error) {
-    console.error(error);
-    emailWarning.textContent = `Unable to save email: ${error.message || 'network error'}. You can still play.`;
-    emailWarning.classList.remove('hidden');
-    emailInput.value = '';
-
-    setTimeout(() => {
-      showScreen(gameScreen);
-      startGame();
-      startButton.disabled = false;
-      startButton.textContent = originalLabel;
-    }, 1000);
-  }
-}
-
-emailInput.addEventListener('input', () => {
-  emailError.classList.add('hidden');
-  emailWarning.classList.add('hidden');
-  emailSuccess.classList.add('hidden');
-  if (!startButton.disabled) {
-    startButton.textContent = 'Get Quote & Play';
-  }
-});
 
 // --- Canvas setup ---
 const canvas = document.getElementById('game-canvas');
@@ -617,12 +531,9 @@ function promptForInitials() {
 }
 
 // --- Wire up buttons ---
-startButton.addEventListener('click', submitEmail);
-
-emailInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') {
-    submitEmail();
-  }
+startButton.addEventListener('click', () => {
+  showScreen(gameScreen);
+  startGame();
 });
 
 highScoresButton.addEventListener('click', () => {

@@ -1,8 +1,0 @@
-{
-  "name": "american-weekend-vacation-game",
-  "version": "1.0.0",
-  "private": true,
-  "dependencies": {
-    "@neondatabase/serverless": "^0.5.1"
-  }
-}
