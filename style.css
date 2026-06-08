@@ -49,6 +49,104 @@ body {
   margin-top: 15px;
 }
 
+#title-screen {
+  padding: 40px 20px;
+}
+
+#title-screen h1 {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.landing-copy {
+  max-width: 540px;
+  margin: 0 auto 30px;
+  font-size: 20px;
+  line-height: 1.5;
+}
+
+#email-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+#email-input {
+  width: 320px;
+  max-width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #fff;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 16px;
+}
+
+#email-input::placeholder {
+  color: #ddd;
+}
+
+#email-form button {
+  width: 240px;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #111;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+#email-form button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.error-message {
+  color: #ff8a8a;
+  font-size: 14px;
+  min-height: 18px;
+}
+
+.success-message {
+  color: #8aff96;
+  font-size: 14px;
+  min-height: 18px;
+}
+
+.hidden {
+  display: none;
+}
+
+#home-high-scores {
+  margin-top: 20px;
+  text-align: left;
+  display: inline-block;
+  width: 320px;
+}
+
+#home-high-scores h2 {
+  margin: 10px 0 10px;
+  font-size: 20px;
+}
+
+#home-high-scores-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#home-high-scores-list li {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  border-radius: 6px;
+  font-size: 16px;
+}
+
 #home-high-scores {
   margin-top: 20px;
   text-align: left;

@@ -6,6 +6,9 @@ const highScoresScreen = document.getElementById('high-scores-screen');
 const startButton = document.getElementById('start-button');
 const highScoresButton = document.getElementById('high-scores-button');
 const backToTitleButton = document.getElementById('back-to-title');
+const emailInput = document.getElementById('email-input');
+const emailError = document.getElementById('email-error');
+const emailSuccess = document.getElementById('email-success');
 
 function showScreen(screen) {
   titleScreen.classList.add('hidden');
@@ -13,6 +16,67 @@ function showScreen(screen) {
   highScoresScreen.classList.add('hidden');
   screen.classList.remove('hidden');
 }
+
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+async function submitEmail() {
+  const email = emailInput.value.trim();
+  if (!isValidEmail(email)) {
+    emailError.textContent = 'Please enter a valid email address.';
+    emailError.classList.remove('hidden');
+    return;
+  }
+
+  emailError.classList.add('hidden');
+  emailSuccess.classList.add('hidden');
+  startButton.disabled = true;
+  const originalLabel = startButton.textContent;
+  startButton.textContent = 'Submitting...';
+
+  try {
+    const response = await fetch('/api/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+
+    const result = await response.json();
+    if (!response.ok) {
+      emailError.textContent = result?.error || 'Unable to submit your email. Please try again.';
+      emailError.classList.remove('hidden');
+      startButton.disabled = false;
+      startButton.textContent = originalLabel;
+      return;
+    }
+
+    emailSuccess.textContent = 'Email saved! Starting game...';
+    emailSuccess.classList.remove('hidden');
+    emailInput.value = '';
+
+    setTimeout(() => {
+      showScreen(gameScreen);
+      startGame();
+      startButton.disabled = false;
+      startButton.textContent = originalLabel;
+    }, 1000);
+  } catch (error) {
+    console.error(error);
+    emailError.textContent = 'Unable to submit your email. Please try again later.';
+    emailError.classList.remove('hidden');
+    startButton.disabled = false;
+    startButton.textContent = originalLabel;
+  }
+}
+
+emailInput.addEventListener('input', () => {
+  emailError.classList.add('hidden');
+  emailSuccess.classList.add('hidden');
+  if (!startButton.disabled) {
+    startButton.textContent = 'Get Quote & Play';
+  }
+});
 
 // --- Canvas setup ---
 const canvas = document.getElementById('game-canvas');
@@ -531,9 +595,12 @@ function promptForInitials() {
 }
 
 // --- Wire up buttons ---
-startButton.addEventListener('click', () => {
-  showScreen(gameScreen);
-  startGame();
+startButton.addEventListener('click', submitEmail);
+
+emailInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    submitEmail();
+  }
 });
 
 highScoresButton.addEventListener('click', () => {
