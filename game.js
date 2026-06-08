@@ -509,7 +509,16 @@ function endGame(reachedHome) {
   if (reachedHome) {
     showMessage('You Made It!!', reachedHome);
   } else {
-    showMessage('Game Over', reachedHome);
+    let message = 'You got stopped by the dogs. Your score: ';
+    const initials = prompt(message + score + '. Enter your initials (3 letters):', 'AAA');
+    if (initials) {
+      const trimmed = initials.toUpperCase().slice(0, 3);
+      const scores = getHighScores();
+      scores.push({ initials: trimmed, score });
+      scores.sort((a, b) => b.score - a.score);
+      saveHighScores(scores.slice(0, 10));
+    }
+    showScreen(titleScreen);
   }
 }
 
