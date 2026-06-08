@@ -1,10 +1,14 @@
-const express = require('express');
-const { Pool } = require('pg');
-const path = require('path');
-require('dotenv').config();
+import express from 'express';
+import { Pool } from 'pg';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Middleware
 app.use(express.json());
@@ -63,6 +67,18 @@ app.post('/api/save-email', async (req, res) => {
   } catch (err) {
     console.error('Error saving email:', err.message);
     res.status(500).json({ error: 'Failed to save email: ' + err.message });
+  }
+});
+
+// API endpoint to get email count
+app.get('/api/get-email-count', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT COUNT(*) as count FROM emails');
+    const count = result.rows[0].count;
+    res.status(200).json({ count: parseInt(count) });
+  } catch (err) {
+    console.error('Error getting email count:', err.message);
+    res.status(500).json({ error: 'Failed to get email count' });
   }
 });
 

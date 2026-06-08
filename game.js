@@ -29,6 +29,20 @@ emailInput.addEventListener('keypress', (e) => {
   }
 });
 
+// Load email count on page load
+async function loadEmailCount() {
+  try {
+    const response = await fetch('/api/get-email-count');
+    const data = await response.json();
+    document.getElementById('email-count').textContent = data.count || 0;
+  } catch (err) {
+    console.error('Error loading email count:', err);
+  }
+}
+
+// Load count when page loads
+loadEmailCount();
+
 async function submitEmail() {
   const email = emailInput.value.trim();
 
@@ -60,13 +74,14 @@ async function submitEmail() {
       return;
     }
 
-    // Email saved successfully, proceed to game
+    // Email saved successfully, refresh count and proceed to game
     console.log('Email saved successfully:', email);
+    await loadEmailCount();
     emailLoading.classList.add('hidden');
     showScreen(titleScreen);
   } catch (err) {
     console.error('Network/Fetch Error:', err);
-    showEmailError('Network error. Make sure the server is running on localhost:3000');
+    showEmailError('Network error. Make sure the server is running.');
     emailSubmitButton.disabled = false;
     emailLoading.classList.add('hidden');
   }

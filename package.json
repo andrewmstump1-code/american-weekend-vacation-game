@@ -2,6 +2,7 @@
   "name": "equipment-sales-game",
   "version": "1.0.0",
   "description": "Equipment Sales Company landing page with game",
+  "type": "module",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
