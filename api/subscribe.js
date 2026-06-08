@@ -2,12 +2,39 @@ import { createClient } from '@neondatabase/serverless';
 
 const client = createClient({ connectionString: process.env.NEON_DB_URL });
 
+async function parseJsonBody(req) {
+  if (req.body) return req.body;
+
+  return new Promise((resolve, reject) => {
+    let body = '';
+    req.on('data', (chunk) => {
+      body += chunk;
+    });
+    req.on('end', () => {
+      if (!body) return resolve({});
+      try {
+        resolve(JSON.parse(body));
+      } catch (error) {
+        reject(error);
+      }
+    });
+    req.on('error', reject);
+  });
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed. Use POST.' });
   }
 
-  const { email } = req.body || {};
+  let body;
+  try {
+    body = await parseJsonBody(req);
+  } catch (error) {
+    return res.status(400).json({ error: 'Invalid JSON body.' });
+  }
+
+  const { email } = body || {};
   if (!email || typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return res.status(400).json({ error: 'Invalid email address.' });
   }
