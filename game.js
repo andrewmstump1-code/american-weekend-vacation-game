@@ -27,7 +27,6 @@ let player;
 let dogs = [];
 let houses = [];
 let waveHouseIndex = 0;
-let pendingEndGame = null;
 let streetLength = 1600; // how far Jamie has to run to reach home
 let gameOver = false;
 let score = 0;
@@ -59,7 +58,6 @@ function startGame() {
   health = 3;
   gameOver = false;
   startTime = Date.now();
-  pendingEndGame = null;
   messageOverlay.classList.add('hidden');
 
   document.getElementById('score-display').textContent = 'Score: ' + score;
@@ -473,51 +471,22 @@ function saveHighScores(scores) {
 }
 
 // reachedHome = true if Jamie reached home, false if lost all health
-function showMessage(text, reachedHome) {
-  pendingEndGame = reachedHome;
+function showMessage(text) {
   messageText.textContent = text;
   messageOverlay.classList.remove('hidden');
 }
 
 messageOk.addEventListener('click', () => {
   messageOverlay.classList.add('hidden');
-
-  if (pendingEndGame !== null) {
-    const reachedHome = pendingEndGame;
-    pendingEndGame = null;
-
-    let message = reachedHome
-      ? 'You made it home! Your score: '
-      : 'You got stopped by the dogs. Your score: ';
-
-    const initials = prompt(message + score + '. Enter your initials (3 letters):', 'AAA');
-    if (initials) {
-      const trimmed = initials.toUpperCase().slice(0, 3);
-      const scores = getHighScores();
-      scores.push({ initials: trimmed, score });
-      scores.sort((a, b) => b.score - a.score);
-      saveHighScores(scores.slice(0, 10));
-    }
-
-    showScreen(titleScreen);
-  }
+  showScreen(titleScreen);
 });
 
 function endGame(reachedHome) {
   gameOver = true;
 
   if (reachedHome) {
-    showMessage('You Made It!!', reachedHome);
+    showMessage('You Made It!!');
   } else {
-    let message = 'You got stopped by the dogs. Your score: ';
-    const initials = prompt(message + score + '. Enter your initials (3 letters):', 'AAA');
-    if (initials) {
-      const trimmed = initials.toUpperCase().slice(0, 3);
-      const scores = getHighScores();
-      scores.push({ initials: trimmed, score });
-      scores.sort((a, b) => b.score - a.score);
-      saveHighScores(scores.slice(0, 10));
-    }
     showScreen(titleScreen);
   }
 }
