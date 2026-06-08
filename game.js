@@ -82,30 +82,34 @@ function spawnDogs() {
 
 function spawnHouses() {
   houses = [];
-  waveHouseIndex = Math.floor(Math.random() * 8);
+  waveHouseIndex = Math.floor(Math.random() * 10);
 
-  for (let side = 0; side < 2; side++) {
-    for (let i = 0; i < 4; i++) {
-      const isLeft = side === 0;
-      const x = isLeft ? i * 200 + 40 : i * 200 + 420;
-      const y = isLeft ? 200 : 210;
-      const baseColor = isLeft ? '#8B4513' : '#556B2F';
-      const roofColor = isLeft ? '#DEB887' : '#CD853F';
+  for (let i = 0; i < 10; i++) {
+    const isLeft = i % 2 === 0;
+    const x = 40 + i * 160;
+    const y = isLeft ? 200 : 210;
+    const baseColor = isLeft ? '#8B4513' : '#556B2F';
+    const roofColor = isLeft ? '#DEB887' : '#CD853F';
 
-      houses.push({
-        x,
-        y,
-        width: 80,
-        height: 80,
-        baseColor,
-        roofColor,
-        doorColor: '#3C220F',
-        windowLight: Math.random() > 0.4,
-        address: String(100 + Math.floor(Math.random() * 900)),
-        hasPerson: houses.length === waveHouseIndex
-      });
-    }
+    houses.push({
+      x,
+      y,
+      width: 80,
+      height: 80,
+      baseColor,
+      roofColor,
+      doorColor: '#3C220F',
+      windowLight: Math.random() > 0.4,
+      address: String(100 + Math.floor(Math.random() * 900)),
+      hasPerson: houses.length === waveHouseIndex
+    });
   }
+}
+
+function getCameraX() {
+  const followX = player.x - 250;
+  const maxCamera = Math.max(streetLength - canvas.width + 100, 0);
+  return Math.min(Math.max(followX, 0), maxCamera);
 }
 
 function loop() {
@@ -225,25 +229,27 @@ function drawFireworks() {
   });
 }
 
-function drawHouses() {
+function drawHouses(cameraX) {
   houses.forEach((house) => {
+    const x = house.x - cameraX;
+
     // House body
     ctx.fillStyle = house.baseColor;
-    ctx.fillRect(house.x, house.y, house.width, house.height);
+    ctx.fillRect(x, house.y, house.width, house.height);
 
     // Roof
     ctx.fillStyle = house.roofColor;
     ctx.beginPath();
-    ctx.moveTo(house.x - 10, house.y);
-    ctx.lineTo(house.x + house.width / 2, house.y - 40);
-    ctx.lineTo(house.x + house.width + 10, house.y);
+    ctx.moveTo(x - 10, house.y);
+    ctx.lineTo(x + house.width / 2, house.y - 40);
+    ctx.lineTo(x + house.width + 10, house.y);
     ctx.closePath();
     ctx.fill();
 
     // Door
     const doorWidth = 24;
     const doorHeight = 36;
-    const doorX = house.x + (house.width - doorWidth) / 2;
+    const doorX = x + (house.width - doorWidth) / 2;
     const doorY = house.y + house.height - doorHeight;
     ctx.fillStyle = house.doorColor;
     ctx.fillRect(doorX, doorY, doorWidth, doorHeight);
@@ -258,8 +264,8 @@ function drawHouses() {
     const winW = 18;
     const winH = 16;
     const windowPositions = [
-      { x: house.x + 10, y: house.y + 18 },
-      { x: house.x + house.width - 10 - winW, y: house.y + 18 }
+      { x: x + 10, y: house.y + 18 },
+      { x: x + house.width - 10 - winW, y: house.y + 18 }
     ];
 
     windowPositions.forEach((pos) => {
@@ -281,7 +287,7 @@ function drawHouses() {
     ctx.fillStyle = '#FFFFFF';
     ctx.font = 'bold 12px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText(house.address, house.x + house.width / 2, house.y + house.height + 18);
+    ctx.fillText(house.address, x + house.width / 2, house.y + house.height + 18);
 
     // Person waving from one house
     if (house.hasPerson) {
@@ -317,7 +323,7 @@ function drawHouses() {
   });
 }
 
-function drawStreet() {
+function drawStreet(cameraX) {
   // Street
   ctx.fillStyle = '#333333';
   ctx.fillRect(0, 260, canvas.width, 140);
@@ -333,14 +339,47 @@ function drawStreet() {
   }
 }
 
+function drawFinishLine(cameraX) {
+  const finishX = streetLength - cameraX;
+  const postHeight = 80;
+  const bannerY = 260 - postHeight / 2;
+  const bannerWidth = 140;
+
+  // Posts
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(finishX - 4, 180, 8, postHeight);
+  ctx.fillRect(finishX + bannerWidth - 4, 180, 8, postHeight);
+
+  // Banner
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(finishX, 190, bannerWidth, 24);
+
+  // Text
+  ctx.fillStyle = '#000000';
+  ctx.font = 'bold 16px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText('FINISH', finishX + bannerWidth / 2, 208);
+
+  // Checkered line on the road
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(finishX, 260);
+  ctx.lineTo(finishX, 400);
+  ctx.stroke();
+}
+
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   // Background: sunset sky, fireworks, houses, street
+  const cameraX = getCameraX();
+
   drawGradientSky();
   drawFireworks();
-  drawHouses();
-  drawStreet();
+  drawHouses(cameraX);
+  drawStreet(cameraX);
+  drawFinishLine(cameraX);
 
   // Player (Jamie the kid)
   const shirtHeight = 28;
@@ -428,6 +467,10 @@ function saveHighScores(scores) {
 // reachedHome = true if Jamie reached home, false if lost all health
 function endGame(reachedHome) {
   gameOver = true;
+
+  if (reachedHome) {
+    alert('You Made It!!');
+  }
 
   let message = reachedHome
     ? 'You made it home! Your score: '
